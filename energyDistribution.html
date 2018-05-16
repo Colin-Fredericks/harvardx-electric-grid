@@ -1,0 +1,263 @@
+<!doctype html>
+<html>
+	<head>
+		<!-- Bootstrap 
+	  	<meta charset="utf-8">
+   	 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+    	<meta name="viewport" content="width=device-width, initial-scale=1">
+		-->
+		
+		 <!-- Bootstrap -->
+    	<link href="bootstrap.min.css" rel="stylesheet">
+    	<!-- Bootstrap theme -->
+    	<link href="bootstrap-theme.min.css" rel="stylesheet">
+        <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+   		<!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    	<!--[if lt IE 9]>
+      	<script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+      	<script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    	<![endif]-->
+    
+		<link rel="stylesheet" type="text/css" href="energyDistribution.css">
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+		<script src="https://code.jquery.com/ui/1.8.21/jquery-ui.min.js"></script>
+		<script src="jquery.ui.touch-punch.min.js"></script>
+		<script src="bootstrap.min.js"></script>
+		<script src="numeric-1.2.6.js"></script>
+		<script language="javascript" type="text/javascript" src="jquery.flot.js"></script>
+		<script language="javascript" type="text/javascript" src="jquery.flot.stack.js"></script>
+		<script language="javascript" type="text/javascript" src="jquery.flot.axislabels.js"></script>
+		<script language="javascript" type="text/javascript" src="jquery.flot.tooltip.js"></script>
+		<script src="energyOptimizationMatrix.js"></script>
+		<script src="energyDistribution.js"></script>
+
+	</head>
+	<body>
+	 <div class="container">
+	
+		<div class="page-header">
+	  		<h3>Electricity System Planning and Dispatch Calculator</h3>
+	  		<h6 class="h7">Daniel Thorpe, Jonah Elgart, and David Keith, Apr. 2016; Questions or comments contact <a href="mailto:daniel.thorpe01@gmail.com?subject=Electricity System Planning and Dispatch Calculator">daniel.thorpe01@gmail.com</a> </h6>
+	  		<p>
+				This is a pedagogical tool for learning basic trends in electricity system planning and dispatch; it excludes many real-world details and is best used to understand qualitative trends. See notes at bottom.
+			</p>
+			<p>
+				User input in <span style="color:#1B7F02; font-weight:bold;">green</span> cells.  You can also select different load curves, and different "input scenarios" which fill in the user input cells with interesting scenarios like 2010 or 2015 US prices.
+	  		</p>
+    	</div>
+	
+		<!-- screen reader descriptions -->
+		<div id="srDescription" class="sr">
+			<p>Adjust values in the following table, and set the carbon price and capital charge factor. Press the "plan system" button to optimize the system over twenty four hours. Press the "Cost vs. Intensity Curve" button to see the relationship between carbon intensity and carbon price. Additional summarized results and tables of numerical results are following.</p>
+		</div>
+		<!-- end of screen reader descriptions -->
+
+    	<div id="numbersIO" class="row">
+    		<!-- start table -->
+			<div class="table" style="display: block; width:700px;" aria-hidden="false">
+				<table class="table table-sm table-bordered table-hover ">
+					<tbody>
+						<!-- titles -->
+						<tr>
+							<td style="text-align: center; font-weight: bold;"></td>
+							<td style="text-align: center; font-weight: bold;">Capital Cost ($/kW)</td>
+							<td style="text-align: center; font-weight: bold;">Fuel Cost ($/GJ)</td>
+							<td style="text-align: center; font-weight: bold;">Efficiency</td>
+							<td class="td_result" style="text-align: center; font-weight: bold;">Utilization</td>
+							<td class="td_result" style="text-align: center; font-weight: bold;">Capacity (GW)</td>
+						</tr>
+						<!-- gas -->
+						<tr>
+							<td style="text-align: center; font-weight: bold;">Gas</td>
+							<td class="td_input" style="text-align: center;">	<input type="text" id="gasCapitalCost" class="text-input-in-table"></td>
+							<td class="td_input" style="text-align: center;">	<input type="text" id="gasFuelCost" class="text-input-in-table"></td>
+							<td class="td_input" style="text-align: center;">	<input type="text" id="gasEfficiency" class="text-input-in-table"></td>
+							<td class="td_result" style="text-align: center;">	<input type="text" id="gasUtilization" class="text-dynamic" readonly></td>
+							<td class="td_result " style="text-align: center;">	<input type="text" id="gasCapacity"  class="text-dynamic" readonly></td>
+						</tr>
+						<!-- coal -->
+						<tr>
+							<td style="text-align: center; font-weight: bold;">Coal</td>
+							<td class="td_input" style="text-align: center;">	<input type="text" id="coalCapitalCost" class="text-input-in-table"></td>
+							<td class="td_input" style="text-align: center;">	<input type="text" id="coalFuelCost" class="text-input-in-table"></td>
+							<td class="td_input" style="text-align: center;">	<input type="text" id="coalEfficiency" class="text-input-in-table"></td>
+							<td class="td_result" style="text-align: center;">	<input type="text" id="coalUtilization" class="text-dynamic" readonly></td>
+							<td class="td_result" style="text-align: center;">	<input type="text" id="coalCapacity" class="text-dynamic" readonly></td>
+						</tr>
+						<!-- solar -->
+						<tr>
+							<td style="text-align: center; font-weight: bold;">Solar</td>
+							<td class="td_input" style="text-align: center;">	<input type="text" id="solarCapitalCost" class="text-input-in-table"></td>
+							<td style="text-align: center;">    <input type="text" id="solarFuelCost" class="text-input-in-table text-input-readonly" readonly></td>
+							<td style="text-align: center;"> 	<input type="text" id="solarEfficiency" class="text-input-in-table text-input-readonly" readonly></td>
+							<td class="td_result" style="text-align: center;">	<input type="text" id="solarUtilization" class="text-dynamic" readonly></td>
+							<td class="td_result" style="text-align: center;">	<input type="text" id="solarCapacity" class="text-dynamic" readonly></td>
+						</tr>
+						<!-- battery -->
+						<tr>
+							<td style="text-align: center; font-weight: bold;">Battery</td>
+							<td class="td_input" style="text-align: center;">	<input type="text" id="batteryCapitalCost" class="text-input-in-table"></td>
+							<td style="text-align: center;"> 	<input type="text" id="batteryFuelCost" class="text-input-in-table text-input-readonly" readonly></td>
+							<td style="text-align: center;"> 	<input type="text" id="batteryEfficiency" class="text-input-in-table text-input-readonly" readonly></td>
+							<td class="td_result" style="text-align: center;">	<input type="text" id="batteryUtilization" class="text-dynamic" readonly></td>
+							<td class="td_result" style="text-align: center;">	<input type="text" id="batteryCapacity" class="text-dynamic" readonly></td>
+						</tr>
+					</tbody>
+				</table>
+		   	</div>
+	
+		   	<div class="table" style="display:block; width: 700px; margin-top: -10px; margin-bottom: -65px;" aria-hidden="false">
+		   		<table class="table table-borderless table-sm">
+					<tbody>
+						<tr aria-hidden="true">
+							<td style="text-align: center; font-weight: bold; width:150px;" class="text-dynamic"><span class="table-varied-row-1">Carbon Price ($/tCO<sub>2</sub>)</span></td>
+							<td style="text-align: center; font-weight: bold; width:150px;"><span class="table-varied-row-1">Capital Charge Factor</span></td>
+							<td> </td>	
+						</tr>
+						<tr>
+							<td style="text-align: center;">	<input type="text" id="carbonPrice" class="text-input table-varied-row-2 td_input" style="width: 150px; font-weight:400; text-align: center;" aria-label="Carbon Price in $ per t, C O 2"> </td>	
+							<td style="text-align: center;">	<input type="text" id="ccf" class="text-input table-varied-row-2 td_input" style="width: 150px; font-weight:400; text-align: center;" aria-label="Capital Charge Factor"> </td>	
+							<td> <button id="calculateBtn" type=button class="btn btn-sm btn-success pull-right table-varied-row-2" aria-label="Plan System Button. Press to recalculate tables.">Plan System</button> </td>
+						</tr>
+						<tr aria-hidden="true">
+							<td style="text-align: center; font-weight: bold; width:150px;" class="text-dynamic"><span class="table-varied-row-3">Input Scenarios</span></td>
+							<td style="text-align: center; font-weight: bold; width:150px;"><span class="table-varied-row-3">Load Curve</span></td>
+							<td ></td>
+						</tr>
+						<tr>
+							<td style="text-align: center;" aria-label="Scenario Pull down button">
+								<div class="btn-group table-varied-row-4">
+									<button id="scenarioBtn" type="button" data-toggle="dropdown" class="btn btn-sm btn-default dropdown-toggle"><span id="scenarioBtnText">Default</span> <span class="caret"></span></button>
+									<ul class="dropdown-menu">
+										<li><a href="#" id="scenarioDefault">Default</a></li>
+										<li><a href="#" id="scenarioWinter">Winter</a></li>
+										<li><a href="#" id="scenarioSummer">Summer</a></li>
+										<li><a href="#" id="scenarioUS2015Average">US 2015 Average</a></li>
+										<li><a href="#" id="scenarioUS2010Average">US 2010 Average</a></li>
+										<!-- <li><a href="#" id="scenarioUnsubsidizedSolar">Unsubsidized Solar</a></li> -->
+										<!-- <li><a href="#" id="scenarioUS2015Winter">US 2015 Winter</a></li> -->
+										
+									</ul>
+					   			</div>
+							</td>
+							<td style="text-align: center;" aria-label="Load Profile Pull down button">
+								<div class="btn-group table-varied-row-4">
+									<button id="loadProfileBtn" type="button" data-toggle="dropdown" class="btn btn-sm btn-default dropdown-toggle"><span id="loadProfileBtnText">Default</span> <span class="caret"></span></button>
+									<ul class="dropdown-menu">
+										<li><a href="#" id="defaultLoad">Default</a></li>
+										<li><a href="#" id="summer">Summer</a></li>
+										<li><a href="#" id="peakLoadShifting">Peak Load Shifting</a></li>
+										<!-- <li><a href="#" id="northernLatitudeWinter">Northern Latitude Winter</a></li> -->
+										<!-- <li><a href="#" id="californiaDuckCurve">California Duck Curve</a></li> -->
+									</ul>
+					   			</div>
+							</td>
+							<td ><button id="intensityBtn" type=button class="btn btn-sm btn-success pull-right table-varied-row-4" aria-label="Cost vs Intensity Button. Press to recalculate tables.">Cost vs Intensity Curve</button></td>
+						</tr>
+					</tbody>
+				</table>
+		   	</div>
+		   	<!-- end table -->	 
+
+	   		
+  	
+
+		   	<br><br>
+		   	<div class="table" style="display:block; width: 700px;" aria-hidden="false">
+		   		<table class="table table-sm table-bordered ">
+					<tbody>
+						<tr>
+							<td style="text-align: center; font-weight: bold; width:250px; class="text-dynamic">Average Cost of Electricity ($/kWh)</td>
+							<td class="td_result" style="text-align: center;">	<input type="text" id="averageCost" class="text-dynamic" readonly></td>	
+							<td style="text-align: center; font-weight: bold; width:250px;">Carbon Intensity (kgCO<sub>2</sub>/kWh)</td>
+							<td class="td_result" style="text-align: center;">	<input type="text" id="carbonIntensity" class="text-dynamic" readonly></td>	
+						</tr>
+						<tr>
+							<td style="text-align: center; font-weight: bold; width:250px; class="text-dynamic">Percentage of Average Cost from Fixed Costs:</td>
+							<td class="td_result" style="text-align: center;">	<input type="text" id="averageCostPercentFixed" class="text-dynamic" readonly></td>	
+							<td style="text-align: center; font-weight: bold; width:250px;">Percentage of Average Cost from Variable Costs:</td>
+							<td class="td_result" style="text-align: center;">	<input type="text" id="averageCostPercentVariable" class="text-dynamic" readonly></td>	
+						</tr>
+					</tbody>
+				</table>
+		   	</div>
+		   	<!-- end table -->
+    	</div> <!-- end row -->
+
+		<div id="graph-content" aria-hidden="true">
+			<div class="graph-container">
+				<div id="flot-graph" style="width: 100%; height: 100%; font-size: 14px; line-height: 1.2em;" ></div>
+				<div id="flot-intensity-graph" style="width: 100%; height: 100%; font-size: 14px; line-height: 1.2em;" ></div>
+			</div>
+		</div>
+
+		<!-- Screen Reader Custom Data Output -->
+		<div class="sr">
+			<!-- plan system output -->
+			<div aria-live="polite">
+				<p>Plan System Results, followed by Cost vs Intensity Results</p>
+				<p id="aria-daily-gas-generation"></p>
+				<p id="aria-daily-coal-generation"></p>
+				<p id="aria-daily-solar-generation"></p>
+				<p id="aria-daily-battery-generation"></p>
+			</div>
+			<div aria-label="optimization-results-table" aria-live="off" role="form" id="optimization-results-table" class="table" style=" 
+			display: block; overflow: auto; width: 100%; overflow-y:scroll;">
+				<table>
+					<tbody>
+					</tbody>
+				</table>
+			</div>
+			<!-- intensity curve output -->
+			<div aria-live="polite">
+				<p>Cost vs Intensity Results</p>
+				<p id="aria-intensity-lowest-price"></p>
+				<p id="aria-intensity-zero-carbon"></p>
+			</div>
+			<div aria-label="intensity-results-table"  aria-live="off" role="form" id="intensity-results-table" class="table" style="display: block; overflow: auto; width: 100%; overflow-y:scroll;">
+				<table>
+					<tbody>
+					</tbody>
+				</table>
+			</div>
+		</div>
+
+		<!-- Notes and References -->
+		<!-- Moved to separate Raw HTML component in edX.
+		<div>
+	  		<h3>Notes</h3>
+	  		<p>
+				<span class="notes-title">"Plan System"</span> button plans and dispatches the lowest-cost system to meet the load curve given user inputs.  Shows capacities built in the top table, shows hour-by-hour dispatch in graph at bottom, and shows statistics like average electricity cost and carbon intensity in table above graph.
+			</p>
+			<p>
+				<span class="notes-title">"Cost vs Intensity Curve"</span> runs the optimization with the user inputs and many carbon prices, starting at $0 and stepping up by $10/tCO<sub>2</sub> until it reaches a carbon intensity of 0.  It then plots results as electricity cost vs carbon intensity to quickly visualize the cost of different levels of decarbonization.  Tooltips show the carbon tax and generator capacities built, so you can see what carbon tax is needed for a given level of decarbonization, and which generators are built.
+			</p>
+			<p>
+				<span class="notes-title">"Capital Charge Factor"</span> is the yearly cost of capital; if the yearly payment on a $1000 loan is $100 then the capital charge factor is $100/$1000 = .1. Typical CCF's for energy system projects are .1 - .15. You can read more about CCF's and see values used by the US EPA for different kinds of projects <a href="https://www.epa.gov/sites/production/files/2015-07/documents/chapter_8_financial_assumptions.pdf" target="_blank">here</a>.
+			</p>
+			<p>
+				<span class="notes-title">"Default"</span> input scenario and load curve represent annual averages for the US and Europe.<br>
+				<span class="notes-title">"Winter"</span> scenario has a lower capacity factor for solar, ~.2 instead of the default of ~.25<br>
+				<span class="notes-title">"Summer"</span> has capacity factor .33<br>
+				<span class="notes-title">"Peak Load Shifting"</span> load curve described <a href="#" target="_blank">here</a>, can be achieved by shifting demand or using energy storage
+			</p>
+			<br>
+	  		<h3>References</h3>
+	  		<p>
+				<span class="reference-title">Capital Costs:</span> adapted from LBNL's "Utility Scale Solar 2014" <a href="https://emp.lbl.gov/sites/all/files/lbnl-1000917.pdf" target="_blank">https://emp.lbl.gov/sites/all/files/lbnl-1000917.pdf</a> and EIA's "Annual Energy Outlook 2015" <a href="http://www.eia.gov/forecasts/aeo/" target="_blank">http://www.eia.gov/forecasts/aeo/</a>
+				<br><br>
+
+				<span class="reference-title">Fuel Costs:</span> adapted from BP's "Statistical Review of World Energy 2015" <a href="http://www.bp.com/en/global/corporate/energy-economics/statistical-review-of-world-energy.html" target="_blank">http://www.bp.com/en/global/corporate/energy-economics/statistical-review-of-world-energy.html</a> and EIA's "Electric Power Monthly" <a href="http://www.eia.gov/electricity/monthly/" target="_blank">http://www.eia.gov/electricity/monthly/</a>
+				<br><br>
+
+				<span class="reference-title">Solar Capacity Factors:</span> adapted from NREL's Solar Radiation Resource Maps <a href="http://rredc.nrel.gov/solar/old_data/nsrdb/1961-1990/redbook/atlas/" target="_blank">http://rredc.nrel.gov/solar/old_data/nsrdb/1961-1990/redbook/atlas/</a>, SolarGIS's Global Horizontal Irradiation Maps <a href="http://solargis.info/doc/free-solar-radiation-maps-GHI" target="_blank">http://solargis.info/doc/free-solar-radiation-maps-GHI</a> and LBNL's "Utility Scale Solar 2014" <a href="https://emp.lbl.gov/sites/all/files/lbnl-1000917.pdf" target="_blank">https://emp.lbl.gov/sites/all/files/lbnl-1000917.pdf</a>
+				<br><br>
+
+				<span class="reference-title">Load Curves:</span> adapted from ISO New England <a href="http://www.iso-ne.com/isoexpress/web/reports/load-and-demand" target="_blank">http://www.iso-ne.com/isoexpress/web/reports/load-and-demand</a>
+	  		</p>
+    	</div>
+    	-->
+
+	</div><!-- /class="container">-->      	
+    </body>
+</html>
